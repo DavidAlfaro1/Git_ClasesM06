@@ -1,133 +1,154 @@
-
+const palabras = [
+    "CASAS", "PERRO", "GATOS", "PLANO", "ARBOL", "LIMON", "SILLA", "MESA", "LLAVE", "RELOJ",
+    "CAMPO", "JUEGO", "LAPIZ", "PIANO", "TORRE", "NIEVE", "SALUD", "RATON", "SOLAR", "MARCO",
+    "BOLSA", "COCHE", "LLAMA", "PLATA", "BRISA", "CIELO", "FRUTA", "VIAJE", "FLOTA", "CANTO",
+    "NINJA", "MONTE", "GRUPO", "BOMBA", "MUNDO", "HIELO", "RAZON", "FELIZ", "PARED", "RUIDO",
+    "SUELO", "HOJAS", "LUCES", "LIBRO", "PERLA", "FOSIL", "DUCHA", "BRUJA", "FUEGO", "MANGO",
+    "AVION", "LARGO", "GRASA", "PISTA", "CIRCO", "TUNEL", "CASCO", "GLOBO", "LECHE", "AMIGO",
+    "NOCHE", "CABRA", "BAILE", "SALSA", "FONDO", "HUMOR", "MOTOR", "PLUMA", "COLMO", "RAPTO",
+    "FAROL", "ARENA", "BEBER", "PECHO", "RODAR", "PUENTE", "TRONO", "CUEVA", "HUEVO", "ROBOT"
+];
 
 let palabra = "";
-function palabraSecreta() {
-   fetch('https://random-word-api.herokuapp.com/word?lang=es&length=5')
-       .then(response => response.json())
-       .then(data => {
-           palabra = data[0]; // La API devuelve un array, ej: ["perro"]
-          
-           palabra=palabra.toUpperCase();
-           console.log("Tu palabra secreta es:", palabra);
+const intentosMax = 6;
+let intentoActual = 0;
+let posicionActual = 0;
+let grid = [];
+let intentoArray = [];
 
-       });
+const letrasFilas = [
+    ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+    ["A", "S", "D", "F", "G", "H", "J", "K", "L", "Ñ"],
+    ["BORRAR", "Z", "X", "C", "V", "B", "N", "M", "ENTER"]
+];
 
+const gridDiv = document.getElementById("grid");
+const keyboardDiv = document.getElementById("keyboard");
+const message = document.getElementById("message");
+
+function obtenerPalabraSecreta() {
+    palabra = palabras[Math.floor(Math.random() * palabras.length)];
+    console.log("Palabra secreta:", palabra);
 }
 
-function crearTeclado() {
-    //Cojo el div del teclado, para luego ir añadiendo
-    let teclado = document.getElementById("teclado");
+obtenerPalabraSecreta();
 
-    for (let i = 65; i < 91; i++) {
-        //Creo la tecla
-        let tecla = document.createElement("div");
-        tecla.innerHTML = "<p>" + String.fromCharCode(i) + "</p>";
-        tecla.className = "tecla";
-
-        tecla = cambiarFondoTecla(i, tecla);
-
-        tecla.setAttribute("onclick", "escribeTecla('" + String.fromCharCode(i) + "')");
-
-        //Añado la tecla al teclado
-        teclado.appendChild(tecla);
-
-
+for (let i = 0; i < intentosMax; i++) {
+    grid[i] = [];
+    for (let j = 0; j < 5; j++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        gridDiv.appendChild(cell);
+        grid[i][j] = cell;
     }
-
-    for (let i = 0; i < 10; i++) {
-        //Creo la tecla
-        let tecla = document.createElement("div");
-        tecla.innerHTML = "<p>" + i + "</p>";
-        tecla.className = "tecla";
-
-        tecla = cambiarFondoTecla(i, tecla);
-
-        tecla.setAttribute("onclick", "escribeTecla('" + i + "')");
-
-        //Añado la tecla al teclado
-        teclado.appendChild(tecla);
-    }
-
-    let borrar = document.querySelector(".borrarLettra");
-    if (borrar) {
-        borrar.addEventListener("click", borrarLetra);
-    }
-
-    palabraSecreta();
 }
 
-function escribeTecla(letra) {
-    console.log(letra);
-    let miTexto = document.getElementById("miTexto");
-
-    if (miTexto.textContent.length < 5) {
-        miTexto.textContent += letra;
-        
-    }
-    else {
-        miTexto.style.color = "red";
+function agregarLetra(letra) {
+    if (posicionActual < 5) {
+        grid[intentoActual][posicionActual].textContent = letra;
+        intentoArray.push(letra);
+        posicionActual++;
+        console.log("Letra añadida:", letra, "→", intentoArray.join(""));
     }
 }
 
 function borrarLetra() {
-    let miTexto = document.getElementById("miTexto");
-    if (miTexto.textContent.length > 0) {
-        miTexto.textContent = miTexto.textContent.substring(0, miTexto.textContent.length - 1);
-        miTexto.style.color = "black";
+    if (posicionActual > 0) {
+        posicionActual--;
+        const borrada = intentoArray.pop();
+        grid[intentoActual][posicionActual].textContent = "";
+        console.log("Letra borrada:", borrada, "→", intentoArray.join(""));
     }
 }
 
-function esPrimo(num) {
-    if (num < 2) return false;        // 0 y 1 no son primos
-    let limite = Math.sqrt(num);      // optimización
+function enviarIntento() {
+    if (posicionActual !== 5) {
+        console.log("Intento incompleto:", intentoArray.join(""));
+        return;
+    }
 
-    for (let i = 2; i <= limite; i++) {
-        if (num % i === 0) {
-            return false;             // si es divisible, no es primo
+    const intento = intentoArray.join("");
+    console.log("Intento enviado:", intento);
+
+    for (let i = 0; i < 5; i++) {
+        if (intento[i] === palabra[i]) {
+            grid[intentoActual][i].classList.add("correct");
+        } else if (palabra.includes(intento[i])) {
+            grid[intentoActual][i].classList.add("present");
+        } else {
+            grid[intentoActual][i].classList.add("absent");
         }
     }
-    return true;                       // si no tuvo divisores, es primo
+
+    if (intento === palabra) {
+        console.log("¡Victoria!");
+        alert("¡Felicidades! Has ganado");
+        message.textContent = "¡Ganaste!";
+        return;
+    }
+
+    intentoActual++;
+    posicionActual = 0;
+    intentoArray = [];
+
+    if (intentoActual === intentosMax) {
+        console.log("Derrota. Palabra:", palabra);
+        message.textContent = `Perdiste. La palabra era: ${palabra}`;
+    }
 }
 
-function cambiarFondoTecla(i, tecla) {
-    if ((i % 2) == 0) {
-        //poner fondo azul
-        tecla.style.background = "blue";
-        tecla.style.color = "white";
-    }
-    if ((i % 5) == 0) {
-        //poner fondo amarillo
-        tecla.style.background = "yellow";
+function crearTeclado() {
+    keyboardDiv.innerHTML = "";
 
-    }
-    if ((i % 3) == 0) {
-        //poner fondo rojo
-        tecla.style.background = "red";
-        tecla.style.color = "white";
-    }
-    if ((i % 10) == 0) {
-        //poner fondo naranja
-        tecla.style.background = "orange";
+    letrasFilas.forEach(fila => {
+        const row = document.createElement("div");
+        row.classList.add("keyboard-row");
 
-    }
-    if (esPrimo(i)) {
-        //poner fondo verde
-        tecla.style.background = "green";
-        tecla.style.color = "white";
-    }
+        fila.forEach(letra => {
+            const key = document.createElement("div");
+            key.classList.add("key");
 
-    return tecla;
+            if (letra === "ENTER" || letra === "BORRAR") {
+                key.classList.add("big");
+            }
+
+            key.textContent = letra === "BORRAR" ? "DELETE" : letra;
+
+            key.addEventListener("click", () => {
+                if (letra === "ENTER") enviarIntento();
+                else if (letra === "BORRAR") borrarLetra();
+                else agregarLetra(letra);
+            });
+
+            row.appendChild(key);
+        });
+
+        keyboardDiv.appendChild(row);
+    });
 }
 
-function comprobar() {
-    let miTexto = document.getElementById("miTexto");
-    if (miTexto.textContent === palabra) {
-        miTexto.style.background = "green";
-        alert("¡Has acertado la palabra secreta: " + palabra + "!");
-    } else {
-        miTexto.style.background = "red";
-        alert("Palabra incorrecta. Inténtalo de nuevo.");
+function resetJuego() {
+    for (let i = 0; i < intentosMax; i++) {
+        for (let j = 0; j < 5; j++) {
+            grid[i][j].textContent = "";
+            grid[i][j].classList.remove("correct", "present", "absent");
+        }
     }
+
+    intentoActual = 0;
+    posicionActual = 0;
+    intentoArray = [];
+    message.textContent = "";
+    console.clear();
+    console.log("Juego reiniciado");
+    obtenerPalabraSecreta();
+    crearTeclado();
 }
 
 crearTeclado();
+
+document.addEventListener("keydown", e => {
+    if (e.key === "Backspace") borrarLetra();
+    else if (e.key === "Enter") enviarIntento();
+    else if (/^[a-zA-ZñÑ]$/.test(e.key)) agregarLetra(e.key.toUpperCase());
+});
