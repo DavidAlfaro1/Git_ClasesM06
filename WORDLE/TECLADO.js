@@ -1,3 +1,21 @@
+
+/*
+let palabra = "";
+function palabraSecreta() {
+    fetch('https://random-word-api.herokuapp.com/word?lang=es&length=5')
+        .then(response => response.json())
+        .then(data => {
+            palabra = data[0]; // La API devuelve un array, ej: ["perro"]
+            palabra = palabra.toUpperCase();
+            console.log("Tu palabra secreta es:", palabra);
+        });
+}
+*/  //"No funciona la API, así que uso una lista fija de palabras."//
+
+
+
+
+
 const palabras=[
 "CASAS","PERRO","GATOS","PLANO","ARBOL",
 "LIMON","SILLA","MESA","LLAVE","RELOJ",
